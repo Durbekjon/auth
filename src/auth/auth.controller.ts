@@ -12,6 +12,7 @@ import { AuthDto } from './dto/auth.dto';
 import { Tokens } from './types/tokens.type';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
+import { AtGuard } from './common/guards/at.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -24,7 +25,7 @@ export class AuthController {
   async register(@Body() dto: AuthDto): Promise<Tokens> {
     return this.authService.register(dto);
   }
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AtGuard)
   @Post('logout')
   async logout(@Req() req: Request) {
     const user = req.user;
