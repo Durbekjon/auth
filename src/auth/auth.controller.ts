@@ -9,10 +9,10 @@ import {
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { Tokens } from './types/tokens.type';
-import { getCurrentUserId } from './common/decorators/get-current-user-id.decorator';
-import { RtGuard } from './common/guards/rt.guard';
-import { getCurrentUser } from './common/decorators/get-current-user-decorator';
-import { Public } from './common/decorators/public.decorator';
+import { getCurrentUserId } from '../common/decorators/get-current-user-id.decorator';
+import { RtGuard } from '../common/guards/rt.guard';
+import { getCurrentUser } from '../common/decorators/get-current-user-decorator';
+import { Public } from '../common/decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -24,18 +24,18 @@ export class AuthController {
   }
   @Public()
   @Post('register')
-  async register(@Body() dto: AuthDto): Promise<Tokens> {
+  async register(@Body() dto: AuthDto) {
     return this.authService.register(dto);
   }
   @Post('logout')
-  async logout(@getCurrentUserId('sub') id: number) {
-    return this.authService.logout(id);
+  async logout(@getCurrentUserId() sub: number) {
+    return this.authService.logout(sub);
   }
   @UseGuards(RtGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(
-    @getCurrentUserId('sub') id: number,
+    @getCurrentUserId() id: number,
     @getCurrentUser('refresh_token') refresh_token: string,
   ) {
     console.log(refresh_token);
