@@ -4,15 +4,14 @@ import { AuthDto } from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Tokens } from './types/tokens.type';
-import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
     private prisma: PrismaService,
-    private mailer: MailerService,
   ) {}
+
   //   login
   async login(dto: AuthDto): Promise<Tokens> {
     const user = await this.prisma.user.findUnique({
@@ -34,15 +33,23 @@ export class AuthService {
   }
   //   register
   async register(dto: AuthDto) {
-    const x = Math.floor(Math.random() * 6) + 98790;
-    this.mailer.sendMail({
-      to: dto.email,
-      from: 'PUBG@gmail.com',
-      subject: 'Verification',
-      text: 'welcome',
-      html: `<span>Verification code is - ${x} </span>`,
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email: dto.email,
+      },
     });
-    // return Redirect('/auth/check');
+    if (user)
+      throw new ForbiddenException('Access denied: User allready exist');
+    const password = await this.dataHasher(dto.password);
+    const newUser = await this.prisma.user.create({
+      data: {
+        email: dto.email,
+        password,
+      },
+    });
+    const Tokens = await this.getTokens(newUser.id, newUser.email);
+    await this.RtToHash(newUser.id, Tokens.refresh_token);
+    return Tokens;
   }
   //   logout
   async logout(userId: number) {
@@ -82,7 +89,7 @@ export class AuthService {
           email,
         },
         {
-          expiresIn: 60 * 30,
+          expiresIn: 60 * 5,
           secret: 'at-secret',
         },
       ),
@@ -117,20 +124,5 @@ export class AuthService {
         token: hashedToken,
       },
     });
-  }
-  async emailVerificate(dto: AuthDto, key: number, authKey: number) {
-    if (key === authKey) {
-      const password = await this.dataHasher(dto.password);
-      const newUser = await this.prisma.user.create({
-        data: {
-          email: dto.email,
-          password,
-        },
-      });
-      const Tokens = await this.getTokens(newUser.id, newUser.email);
-      await this.RtToHash(newUser.id, Tokens.refresh_token);
-    } else {
-      throw new ForbiddenException("access denied: code didn't match");
-    }
   }
 }

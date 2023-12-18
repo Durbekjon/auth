@@ -5,17 +5,10 @@ import { AuthModule } from './auth/auth.module';
 // import { AtGuard } from './common/guards/at.guard';
 import { AppService } from './app.service';
 import { appController } from './app.controller';
-import { EmailModule } from './email/email.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, EmailModule],
-  providers: [
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: AtGuard,
-    // },
-    AppService,
-  ],
+  imports: [PrismaModule, AuthModule],
+  providers: [AppService],
   controllers: [appController],
 })
 export class AppModule {}
